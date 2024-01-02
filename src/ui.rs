@@ -1,18 +1,16 @@
-use std::char;
+use std::vec;
 
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::Color,
-    widgets::{Block, BorderType, Borders, Paragraph},
+    text::{Line, Span},
+    widgets::{Block, Borders, Paragraph},
     Frame,
 };
 
-use crate::{
-    ascii_constants::{ASCII_A, ASCII_EMPTY},
-    main,
-};
+use crate::game_state::GameState;
 
-pub fn render(frame: &mut Frame) {
+pub fn render(frame: &mut Frame, state: &GameState) {
     let area = Rect::new(
         frame.size().x + 4,
         frame.size().y + 2,
@@ -27,67 +25,114 @@ pub fn render(frame: &mut Frame) {
         .border_type(ratatui::widgets::BorderType::Double)
         .border_style(ratatui::style::Style::default().fg(Color::LightYellow));
     let mut inner_area = main_block.inner(area);
-    inner_area.x += 4;
-    inner_area.width -= 8;
-    inner_area.y += 2;
-    inner_area.height -= 4;
+    inner_area.x += 2;
+    inner_area.width -= 4;
+    inner_area.y += 1;
+    inner_area.height -= 2;
 
     frame.render_widget(main_block, area);
 
-    render_game_area(frame, inner_area);
+    let layout_horizontal = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Percentage(60), Constraint::Percentage(40)])
+        .split(inner_area);
+
+    let board_block = Block::default()
+        .borders(Borders::ALL)
+        .border_type(ratatui::widgets::BorderType::Plain)
+        .border_style(ratatui::style::Style::default().fg(Color::LightYellow));
+
+    for (column_index, column) in layout_horizontal.iter().enumerate() {
+        frame.render_widget(board_block.clone(), *column);
+
+        let mut inner_column = *column;
+        inner_column.x += 2;
+        inner_column.width -= 4;
+        inner_column.y += 1;
+        inner_column.height -= 2;
+
+        if column_index == 0 {
+            render_game_area(frame, state, inner_column);
+        } else {
+            render_manual_area(frame, inner_column);
+        }
+    }
 }
 
-pub fn render_game_area(f: &mut Frame, r: Rect) {
+pub fn render_game_area(f: &mut Frame, state: &GameState, r: Rect) {
+    let number_of_rows_columns = state.mode.get_number_of_rows_and_columns();
+
+    let mut i = 0;
+    let mut constraints_vertical: Vec<Constraint> = Vec::new();
+    let p: u16 = (100 / number_of_rows_columns.0).into();
+    while i < number_of_rows_columns.0 {
+        constraints_vertical.push(Constraint::Percentage(p));
+        i += 1;
+    }
+
+    i = 0;
+    let mut constraints_horizontal: Vec<Constraint> = Vec::new();
+    let p: u16 = (100 / number_of_rows_columns.1).into();
+    while i < number_of_rows_columns.1 {
+        constraints_horizontal.push(Constraint::Percentage(p));
+        i += 1;
+    }
+
     let layout_vertical = Layout::default()
         .direction(Direction::Vertical)
-        //.constraints(vec![Constraint::Length(r.height / 4); 4])
-        .constraints(vec![
-            Constraint::Percentage(25),
-            Constraint::Percentage(25),
-            Constraint::Percentage(25),
-            Constraint::Percentage(25),
-        ])
+        .constraints(constraints_vertical)
         .split(r);
 
     for (row_index, row) in layout_vertical.iter().enumerate() {
         let layout_horizontal = Layout::default()
             .direction(Direction::Horizontal)
-            //.constraints(vec![Constraint::Length(row.width / 4); 4])
-            .constraints(vec![
-                Constraint::Percentage(25),
-                Constraint::Percentage(25),
-                Constraint::Percentage(25),
-                Constraint::Percentage(25),
-            ])
+            .constraints(constraints_horizontal.clone())
             .split(*row);
 
         for (slot_index, slot) in layout_horizontal.iter().enumerate() {
-            let mut box_color = Color::LightYellow;
+            let card = state
+                .board
+                .get(&(
+                    row_index.try_into().unwrap(),
+                    slot_index.try_into().unwrap(),
+                ))
+                .unwrap();
 
-            let block = Block::default()
-                .borders(Borders::ALL)
-                .border_type(BorderType::Double)
-                .border_style(ratatui::style::Style::default().fg(box_color));
-
-            let text_case_widget = Paragraph::new(render_ascii_char('a'))
-                .block(block.clone())
-                .alignment(Alignment::Center)
-                .style(ratatui::style::Style::default().fg(Color::LightRed));
-            f.render_widget(text_case_widget, *slot);
-            f.render_widget(block, *slot);
+            f.render_widget(*card, *slot);
         }
     }
 }
 
-fn render_ascii_char(c: char) -> String {
-    let mut result: String = String::new();
-    let ascii = match c {
-        'a' => ASCII_A,
-        _ => ASCII_EMPTY,
-    };
-    for &x in ascii.iter() {
-        result += x;
-        result += "\n";
-    }
-    return result;
+fn render_manual_area(f: &mut Frame, r: Rect) {
+    let help_text = vec![
+        Line::from(Span::raw("Movement: ← ↓ ↑ →")),
+        Line::from(Span::raw("Claim a card: ENTER / SPACE")),
+        Line::from(Span::raw("Quit: q")),
+    ];
+
+    let text_widget = Paragraph::new(help_text)
+        .alignment(Alignment::Center)
+        .style(ratatui::style::Style::default().fg(Color::LightRed));
+   
+    f.render_widget(text_widget, centered_rect(r, 100, 10))
 }
+
+fn centered_rect(r: Rect, percent_x: u16, percent_y: u16) -> Rect {
+    let popup_layout = Layout::default()
+      .direction(Direction::Vertical)
+      .constraints([
+        Constraint::Percentage((100 - percent_y) / 2),
+        Constraint::Percentage(percent_y),
+        Constraint::Percentage((100 - percent_y) / 2),
+      ])
+      .split(r);
+  
+    Layout::default()
+      .direction(Direction::Horizontal)
+      .constraints([
+        Constraint::Percentage((100 - percent_x) / 2),
+        Constraint::Percentage(percent_x),
+        Constraint::Percentage((100 - percent_x) / 2),
+      ])
+      .split(popup_layout[1])[1]
+  }
