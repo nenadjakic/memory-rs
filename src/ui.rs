@@ -114,10 +114,26 @@ fn render_manual_area(f: &mut Frame, r: Rect, state: &mut GameState) {
     if state.finished {
         help_text.append(&mut vec![
             Line::from(Span::default()),
-            Line::from(Span::styled(
-                "Game over !!!",
-                Style::default().fg(Color::Yellow).add_modifier(Modifier::SLOW_BLINK),
-            )),
+            Line::from(vec![
+                Span::styled(
+                    "You finished game in ",
+                    Style::default()
+                        .fg(Color::Yellow)
+                        .add_modifier(Modifier::SLOW_BLINK),
+                ),
+                Span::styled(
+                    state.number_of_moves.to_string(),
+                    Style::default()
+                        .fg(Color::Magenta)
+                        .add_modifier(Modifier::SLOW_BLINK),
+                ),
+                Span::styled(
+                    " moves",
+                    Style::default()
+                        .fg(Color::Yellow)
+                        .add_modifier(Modifier::SLOW_BLINK),
+                ),
+            ]),
             Line::from(Span::styled(
                 "For new game: ENTER / SPACE",
                 Style::default().fg(Color::Green),

@@ -15,7 +15,7 @@ pub struct GameState {
     row: u8,
     column: u8,
     opened_card_count: u8,
-    number_of_moves: u16,
+    pub number_of_moves: u16,
     pub finished: bool,
     pub selected_symbol: CardWidgetState,
 }
@@ -132,6 +132,7 @@ impl GameState {
                 self.finished = self.is_finish();
                 self.opened_card_count = 0;
             }
+            self.number_of_moves += 1;
         }
     }
 
