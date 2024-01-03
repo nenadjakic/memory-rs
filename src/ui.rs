@@ -2,7 +2,7 @@ use std::vec;
 
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
-    style::Color,
+    style::{Color, Style, Modifier},
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph},
     Frame,
@@ -52,14 +52,14 @@ pub fn render(frame: &mut Frame, state: &mut GameState) {
         inner_column.height -= 2;
 
         if column_index == 0 {
-            render_game_area(frame, state, inner_column);
+            render_game_area(frame, inner_column, state);
         } else {
-            render_manual_area(frame, inner_column);
+            render_manual_area(frame, inner_column, state);
         }
     }
 }
 
-pub fn render_game_area(f: &mut Frame, state: &mut GameState, r: Rect) {
+pub fn render_game_area(f: &mut Frame, r: Rect, state: &mut GameState) {
     let number_of_rows_columns = state.mode.get_number_of_rows_and_columns();
 
     let mut i = 0;
@@ -102,37 +102,46 @@ pub fn render_game_area(f: &mut Frame, state: &mut GameState, r: Rect) {
     }
 }
 
-fn render_manual_area(f: &mut Frame, r: Rect) {
-    let help_text = vec![
+fn render_manual_area(f: &mut Frame, r: Rect, state: &mut GameState) {
+    let mut help_text = vec![
         Line::from(Span::raw("Movement: ← ↓ ↑ →")),
         Line::from(Span::raw("Claim a card: ENTER / SPACE")),
-        Line::from(Span::raw("After two cards are fliped, to continue: ENTER / SPACE")),
+        Line::from(Span::raw(
+            "After two cards are fliped, to continue: ENTER / SPACE",
+        )),
         Line::from(Span::raw("Quit: q")),
     ];
+
+    if state.finished {
+        help_text.append(&mut vec![
+            Line::from(Span::default()),
+            Line::from(Span::styled("You finish !!!", Style::default().add_modifier(Modifier::SLOW_BLINK))),
+        ]);
+    }
 
     let text_widget = Paragraph::new(help_text)
         .alignment(Alignment::Center)
         .style(ratatui::style::Style::default().fg(Color::LightRed));
-   
-    f.render_widget(text_widget, centered_rect(r, 100, 12))
+
+    f.render_widget(text_widget, centered_rect(r, 100, 20))
 }
 
 fn centered_rect(r: Rect, percent_x: u16, percent_y: u16) -> Rect {
     let popup_layout = Layout::default()
-      .direction(Direction::Vertical)
-      .constraints([
-        Constraint::Percentage((100 - percent_y) / 2),
-        Constraint::Percentage(percent_y),
-        Constraint::Percentage((100 - percent_y) / 2),
-      ])
-      .split(r);
-  
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Percentage((100 - percent_y) / 2),
+            Constraint::Percentage(percent_y),
+            Constraint::Percentage((100 - percent_y) / 2),
+        ])
+        .split(r);
+
     Layout::default()
-      .direction(Direction::Horizontal)
-      .constraints([
-        Constraint::Percentage((100 - percent_x) / 2),
-        Constraint::Percentage(percent_x),
-        Constraint::Percentage((100 - percent_x) / 2),
-      ])
-      .split(popup_layout[1])[1]
-  }
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage((100 - percent_x) / 2),
+            Constraint::Percentage(percent_x),
+            Constraint::Percentage((100 - percent_x) / 2),
+        ])
+        .split(popup_layout[1])[1]
+}

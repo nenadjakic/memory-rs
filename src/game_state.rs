@@ -16,6 +16,7 @@ pub struct GameState {
     column: u8,
     opened_card_count: u8,
     number_of_moves: u16,
+    pub finished: bool,
     pub selected_symbol: CardWidgetState,
 }
 static CARD_CHARS: Lazy<Vec<char>> = Lazy::new(|| {
@@ -50,6 +51,7 @@ impl GameState {
             column: 0,
             opened_card_count: 0,
             number_of_moves: 0,
+            finished: false,
             selected_symbol: CardWidgetState {
                 selected_id: (0, 0),
             },
@@ -115,8 +117,6 @@ impl GameState {
         //    entry.1.set_selected(selected);
         //}
 
-        let mut should_increment_opened_card_count = true;
-
         let mut opened_cards: Vec<&mut Card> = self
             .board
             .values_mut()
@@ -125,12 +125,11 @@ impl GameState {
 
         if opened_cards.len() == 2 {
             let resolved = Self::check(*opened_cards[0], *opened_cards[1]);
-            for card in opened_cards.iter_mut() {
-                if resolved {
+            if resolved {
+                for card in opened_cards.iter_mut() {
                     card.state = CardState::RESOLVED;
                 }
-            }
-            if resolved {
+                self.finished = self.is_finish();
                 self.opened_card_count = 0;
             }
         }
@@ -139,8 +138,9 @@ impl GameState {
     fn check(card_1: Card, card_2: Card) -> bool {
         card_1.symbol == card_2.symbol
     }
-    fn is_finish(&self)-> bool {
-        self.board.values().any(|x| x.state != CardState::RESOLVED)
+
+    fn is_finish(&self) -> bool {        
+        !self.board.values().any(|x| x.state != CardState::RESOLVED)
     }
 
     fn init_board(mode: &GameMode) -> HashMap<(u8, u8), Card> {
