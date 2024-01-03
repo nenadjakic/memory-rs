@@ -32,7 +32,7 @@ impl App {
 
     fn draw(&mut self) -> Result<()> {
         self.tui.terminal
-            .draw(|frame| render(frame, &self.state ))?;
+            .draw(|frame| render(frame, &mut self.state ))?;
         Ok(())
     }
 
@@ -42,6 +42,14 @@ impl App {
                 if key.kind == KeyEventKind::Press {
                     if key.code == KeyCode::Char('q') {
                         self.running = false;
+                    } else if key.code == KeyCode::Left {
+                        self.state.move_horizontal(-1);
+                    } else if key.code == KeyCode::Right {
+                        self.state.move_horizontal(1);
+                    } else if key.code == KeyCode::Up {
+                        self.state.move_vertical(-1);
+                    }else if key.code == KeyCode::Down {
+                        self.state.move_vertical(1);
                     }
                 }
             }

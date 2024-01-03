@@ -1,6 +1,9 @@
 use std::collections::HashMap;
 
-use crate::{game_mode::GameMode, widgets::card::Card};
+use crate::{
+    game_mode::GameMode,
+    widgets::card::{Card, CardWidgetState},
+};
 use once_cell::sync::Lazy;
 use rand::{seq::SliceRandom, thread_rng};
 
@@ -10,7 +13,8 @@ pub struct GameState {
     row_count: u8,
     column_count: u8,
     row: u8,
-    column: u8
+    column: u8,
+    pub selected_symbol: CardWidgetState,
 }
 static CARD_CHARS: Lazy<Vec<char>> = Lazy::new(|| {
     Vec::from([
@@ -24,7 +28,7 @@ impl GameState {
         let board = Self::init_board(&mode);
         let mut row_count: u8 = 0;
         let mut column_count: u8 = 0;
-        
+
         for kv in board.keys().into_iter() {
             if kv.0 > row_count {
                 row_count = kv.0;
@@ -34,6 +38,9 @@ impl GameState {
                 column_count = kv.1;
             }
         }
+        let s = board.get(&(0, 0)).unwrap();
+        let c = s.symbol.clone();
+
         Self {
             mode,
             board,
@@ -41,15 +48,51 @@ impl GameState {
             column_count,
             row: 0,
             column: 0,
+            selected_symbol: CardWidgetState {
+                selected_id: (0, 0),
+            },
         }
     }
 
-    pub fn move_horizontal(&self, value: i8) {}
+    pub fn move_horizontal(&mut self, value: i8) {
+        match value {
+            -1 => {
+                if self.column != 0 {
+                    self.column -= 1;
+                }
+            }
+            1 => {
+                if self.column != self.column_count {
+                    self.column += 1;
+                }
+            }
+            _ => panic!("Invalid value. Value must be -1 or 1."),
+        }
+        self.selected_symbol.selected_id = (self.row, self.column);
+    }
 
-    pub fn move_vertical(&self, value: i8) {}
+    pub fn move_vertical(&mut self, value: i8) {
+        match value {
+            -1 => {
+                if self.row != 0 {
+                    self.row -= 1;
+                }
+            }
+            1 => {
+                if self.row != self.row_count {
+                    self.row += 1;
+                }
+            }
+            _ => panic!("Invalid value. Value must be -1 or 1."),
+        }
+        self.selected_symbol.selected_id = (self.row, self.column);
+    }
 
     pub fn select_card(&mut self) {
-        
+        for entry in self.board.iter_mut() {
+            let selected = self.row == entry.0 .0 && self.column == entry.0 .1;
+            entry.1.set_selected(selected);
+        }
     }
 
     fn init_board(mode: &GameMode) -> HashMap<(u8, u8), Card> {
@@ -65,8 +108,7 @@ impl GameState {
         let mut counter = 0;
         for r in 0..row {
             for c in 0..column {
-                let selected = r == 0 && c == 0;
-                result.insert((r, c), Card::new(*card_chars[counter], selected));
+                result.insert((r, c), Card::new((r, c), *card_chars[counter]));
                 counter += 1;
             }
         }

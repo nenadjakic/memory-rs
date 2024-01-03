@@ -8,9 +8,9 @@ use ratatui::{
     Frame,
 };
 
-use crate::game_state::GameState;
+use crate::{game_state::GameState, widgets::card::CardWidgetState};
 
-pub fn render(frame: &mut Frame, state: &GameState) {
+pub fn render(frame: &mut Frame, state: &mut GameState) {
     let area = Rect::new(
         frame.size().x + 4,
         frame.size().y + 2,
@@ -59,7 +59,7 @@ pub fn render(frame: &mut Frame, state: &GameState) {
     }
 }
 
-pub fn render_game_area(f: &mut Frame, state: &GameState, r: Rect) {
+pub fn render_game_area(f: &mut Frame, state: &mut GameState, r: Rect) {
     let number_of_rows_columns = state.mode.get_number_of_rows_and_columns();
 
     let mut i = 0;
@@ -97,8 +97,10 @@ pub fn render_game_area(f: &mut Frame, state: &GameState, r: Rect) {
                     slot_index.try_into().unwrap(),
                 ))
                 .unwrap();
-
+            // todo!("implement stateful widget")
             f.render_widget(*card, *slot);
+
+            f.render_stateful_widget(*card, *slot, &mut state.selected_symbol);
         }
     }
 }
