@@ -97,9 +97,6 @@ pub fn render_game_area(f: &mut Frame, state: &mut GameState, r: Rect) {
                     slot_index.try_into().unwrap(),
                 ))
                 .unwrap();
-            // todo!("implement stateful widget")
-            f.render_widget(*card, *slot);
-
             f.render_stateful_widget(*card, *slot, &mut state.selected_symbol);
         }
     }
@@ -109,6 +106,7 @@ fn render_manual_area(f: &mut Frame, r: Rect) {
     let help_text = vec![
         Line::from(Span::raw("Movement: ← ↓ ↑ →")),
         Line::from(Span::raw("Claim a card: ENTER / SPACE")),
+        Line::from(Span::raw("After two cards are fliped, to continue: ENTER / SPACE")),
         Line::from(Span::raw("Quit: q")),
     ];
 
@@ -116,7 +114,7 @@ fn render_manual_area(f: &mut Frame, r: Rect) {
         .alignment(Alignment::Center)
         .style(ratatui::style::Style::default().fg(Color::LightRed));
    
-    f.render_widget(text_widget, centered_rect(r, 100, 10))
+    f.render_widget(text_widget, centered_rect(r, 100, 12))
 }
 
 fn centered_rect(r: Rect, percent_x: u16, percent_y: u16) -> Rect {

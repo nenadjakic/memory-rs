@@ -48,8 +48,10 @@ impl App {
                         self.state.move_horizontal(1);
                     } else if key.code == KeyCode::Up {
                         self.state.move_vertical(-1);
-                    }else if key.code == KeyCode::Down {
+                    } else if key.code == KeyCode::Down {
                         self.state.move_vertical(1);
+                    } else if key.code == KeyCode::Enter || key.code == KeyCode::Char(' ') {
+                        self.state.flip();
                     }
                 }
             }

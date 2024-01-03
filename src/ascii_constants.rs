@@ -240,11 +240,11 @@ pub const ASCII_Z: [&str; 7] = [
         
 
 pub const ASCII_EMPTY: [&str; 7] = [
-    r"       ",
-    r"       ",
-    r"       ",
-    r"       ",
-    r"       ",
-    r"       ",
-    r"       ",
+    r"        ",
+    r"        ",
+    r"        ",
+    r"        ",
+    r"        ",
+    r"        ",
+    r"        ",
 ];

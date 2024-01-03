@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::{
     game_mode::GameMode,
-    widgets::card::{Card, CardWidgetState},
+    widgets::card::{self, Card, CardState, CardWidgetState},
 };
 use once_cell::sync::Lazy;
 use rand::{seq::SliceRandom, thread_rng};
@@ -14,6 +14,8 @@ pub struct GameState {
     column_count: u8,
     row: u8,
     column: u8,
+    opened_card_count: u8,
+    number_of_moves: u16,
     pub selected_symbol: CardWidgetState,
 }
 static CARD_CHARS: Lazy<Vec<char>> = Lazy::new(|| {
@@ -38,8 +40,6 @@ impl GameState {
                 column_count = kv.1;
             }
         }
-        let s = board.get(&(0, 0)).unwrap();
-        let c = s.symbol.clone();
 
         Self {
             mode,
@@ -48,6 +48,8 @@ impl GameState {
             column_count,
             row: 0,
             column: 0,
+            opened_card_count: 0,
+            number_of_moves: 0,
             selected_symbol: CardWidgetState {
                 selected_id: (0, 0),
             },
@@ -88,11 +90,57 @@ impl GameState {
         self.selected_symbol.selected_id = (self.row, self.column);
     }
 
-    pub fn select_card(&mut self) {
-        for entry in self.board.iter_mut() {
-            let selected = self.row == entry.0 .0 && self.column == entry.0 .1;
-            entry.1.set_selected(selected);
+    pub fn flip(&mut self) {
+        if self.opened_card_count == 2 {
+            for card in self
+                .board
+                .values_mut()
+                .filter(|x| x.state == CardState::OPENED)
+            {
+                card.state = CardState::CLOSED;
+                self.opened_card_count = 0;
+            }
+            return;
         }
+
+        let card = self.board.get_mut(&(self.row, self.column)).unwrap();
+        if card.state == CardState::CLOSED {
+            card.state = CardState::OPENED;
+            self.opened_card_count += 1;
+        } else {
+            return;
+        }
+        //for entry in self.board.iter_mut() {
+        //    let selected = self.row == entry.0 .0 && self.column == entry.0 .1;
+        //    entry.1.set_selected(selected);
+        //}
+
+        let mut should_increment_opened_card_count = true;
+
+        let mut opened_cards: Vec<&mut Card> = self
+            .board
+            .values_mut()
+            .filter(|x| x.state == CardState::OPENED)
+            .collect();
+
+        if opened_cards.len() == 2 {
+            let resolved = Self::check(*opened_cards[0], *opened_cards[1]);
+            for card in opened_cards.iter_mut() {
+                if resolved {
+                    card.state = CardState::RESOLVED;
+                }
+            }
+            if resolved {
+                self.opened_card_count = 0;
+            }
+        }
+    }
+
+    fn check(card_1: Card, card_2: Card) -> bool {
+        card_1.symbol == card_2.symbol
+    }
+    fn is_finish(&self)-> bool {
+        self.board.values().any(|x| x.state != CardState::RESOLVED)
     }
 
     fn init_board(mode: &GameMode) -> HashMap<(u8, u8), Card> {
