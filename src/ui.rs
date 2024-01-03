@@ -2,7 +2,7 @@ use std::vec;
 
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
-    style::{Color, Style, Modifier},
+    style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph},
     Frame,
@@ -109,21 +109,32 @@ fn render_manual_area(f: &mut Frame, r: Rect, state: &mut GameState) {
         Line::from(Span::raw(
             "After two cards are fliped, to continue: ENTER / SPACE",
         )),
-        Line::from(Span::raw("Quit: q")),
     ];
 
     if state.finished {
         help_text.append(&mut vec![
             Line::from(Span::default()),
-            Line::from(Span::styled("You finish !!!", Style::default().add_modifier(Modifier::SLOW_BLINK))),
+            Line::from(Span::styled(
+                "Game over !!!",
+                Style::default().fg(Color::Yellow).add_modifier(Modifier::SLOW_BLINK),
+            )),
+            Line::from(Span::styled(
+                "For new game: ENTER / SPACE",
+                Style::default().fg(Color::Green),
+            )),
         ]);
     }
+
+    help_text.append(&mut vec![
+        Line::from(Span::default()),
+        Line::from(Span::raw("Quit: q")),
+    ]);
 
     let text_widget = Paragraph::new(help_text)
         .alignment(Alignment::Center)
         .style(ratatui::style::Style::default().fg(Color::LightRed));
 
-    f.render_widget(text_widget, centered_rect(r, 100, 20))
+    f.render_widget(text_widget, centered_rect(r, 100, 25))
 }
 
 fn centered_rect(r: Rect, percent_x: u16, percent_y: u16) -> Rect {

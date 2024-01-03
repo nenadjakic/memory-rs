@@ -51,7 +51,11 @@ impl App {
                     } else if key.code == KeyCode::Down {
                         self.state.move_vertical(1);
                     } else if key.code == KeyCode::Enter || key.code == KeyCode::Char(' ') {
-                        self.state.flip();
+                        if self.state.finished {
+                            self.state = GameState::new(self.state.mode);
+                        } else {
+                            self.state.flip();
+                        }
                     }
                 }
             }
