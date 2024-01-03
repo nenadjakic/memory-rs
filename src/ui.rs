@@ -8,7 +8,7 @@ use ratatui::{
     Frame,
 };
 
-use crate::{game_state::GameState, widgets::card::CardWidgetState};
+use crate::{game_state::GameState};
 
 pub fn render(frame: &mut Frame, state: &mut GameState) {
     let area = Rect::new(
@@ -129,7 +129,7 @@ fn render_manual_area(f: &mut Frame, r: Rect, state: &mut GameState) {
                 ),
                 Span::styled(
                     " moves",
-                    Style::default()
+                    Style::default() 
                         .fg(Color::Yellow)
                         .add_modifier(Modifier::SLOW_BLINK),
                 ),

@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::{
     game_mode::GameMode,
-    widgets::card::{self, Card, CardState, CardWidgetState},
+    widgets::card::{Card, CardState, CardWidgetState},
 };
 use once_cell::sync::Lazy;
 use rand::{seq::SliceRandom, thread_rng};
@@ -32,7 +32,7 @@ impl GameState {
         let mut row_count: u8 = 0;
         let mut column_count: u8 = 0;
 
-        for kv in board.keys().into_iter() {
+        for kv in board.keys() {
             if kv.0 > row_count {
                 row_count = kv.0;
             }
